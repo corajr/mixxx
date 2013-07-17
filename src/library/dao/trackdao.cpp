@@ -772,36 +772,73 @@ TrackPointer TrackDAO::getTrackFromDB(const int id) const {
         "WHERE library.id=" + QString("%1").arg(id)
     );
 
+    int artistColumn = -1, titleColumn, albumColumn, yearColumn, genreColumn,
+        composerColumn, trackNumberColumn, commentColumn, urlColumn,
+        keyColumn, durationColumn, bitrateColumn, ratingColumn,
+        sampleRateColumn, cuepointColumn, bpmColumn, replayGainColumn,
+        timesPlayedColumn, dateTimeAddedColumn, playedColumn,
+        channelsColumn, fileTypeColumn, locationColumn, headerParsedColumn,
+        bpmLockColumn, beatsVersionColumn, beatsSubVersionColumn, beatsColumn;
+
     if (query.exec()) {
         while (query.next()) {
-            // Good god! Assign query.record() to a freaking variable!
-            // int trackId = query.value(query.record().indexOf("id")).toInt();
-            QString artist = query.value(query.record().indexOf("artist")).toString();
-            QString title = query.value(query.record().indexOf("title")).toString();
-            QString album = query.value(query.record().indexOf("album")).toString();
-            QString year = query.value(query.record().indexOf("year")).toString();
-            QString genre = query.value(query.record().indexOf("genre")).toString();
-            QString composer = query.value(query.record().indexOf("composer")).toString();
-            QString tracknumber = query.value(query.record().indexOf("tracknumber")).toString();
-            QString comment = query.value(query.record().indexOf("comment")).toString();
-            QString url = query.value(query.record().indexOf("url")).toString();
-            QString key = query.value(query.record().indexOf("key")).toString();
-            int duration = query.value(query.record().indexOf("duration")).toInt();
-            int bitrate = query.value(query.record().indexOf("bitrate")).toInt();
-            int rating = query.value(query.record().indexOf("rating")).toInt();
-            int samplerate = query.value(query.record().indexOf("samplerate")).toInt();
-            int cuepoint = query.value(query.record().indexOf("cuepoint")).toInt();
-            QString bpm = query.value(query.record().indexOf("bpm")).toString();
-            QString replaygain = query.value(query.record().indexOf("replaygain")).toString();
-            int timesplayed = query.value(query.record().indexOf("timesplayed")).toInt();
-            QDateTime datetime_added = query.value(query.record().indexOf("datetime_added")).toDateTime();
-            int played = query.value(query.record().indexOf("played")).toInt();
-            int channels = query.value(query.record().indexOf("channels")).toInt();
-            //int filesize = query.value(query.record().indexOf("filesize")).toInt();
-            QString filetype = query.value(query.record().indexOf("filetype")).toString();
-            QString location = query.value(query.record().indexOf("location")).toString();
-            bool header_parsed = query.value(query.record().indexOf("header_parsed")).toBool();
-            bool has_bpm_lock = query.value(query.record().indexOf("bpm_lock")).toBool();
+            // on the first iteration, get column indices
+            if (artistColumn == -1) {
+                QSqlRecord record = query.record();
+                artistColumn = record.indexOf("artist");
+                titleColumn = record.indexOf("title");
+                albumColumn = record.indexOf("album");
+                yearColumn = record.indexOf("year");
+                genreColumn = record.indexOf("genre");
+                composerColumn = record.indexOf("composer");
+                trackNumberColumn = record.indexOf("tracknumber");
+                commentColumn = record.indexOf("comment");
+                urlColumn = record.indexOf("url");
+                keyColumn = record.indexOf("key");
+                durationColumn = record.indexOf("duration");
+                bitrateColumn = record.indexOf("bitrate");
+                ratingColumn = record.indexOf("rating");
+                sampleRateColumn = record.indexOf("samplerate");
+                cuepointColumn = record.indexOf("cuepoint");
+                bpmColumn = record.indexOf("bpm");
+                replayGainColumn = record.indexOf("replaygain");
+                timesPlayedColumn = record.indexOf("timesplayed");
+                dateTimeAddedColumn = record.indexOf("datetime_added");
+                playedColumn = record.indexOf("played");
+                channelsColumn = record.indexOf("channels");
+                fileTypeColumn = record.indexOf("filetype");
+                locationColumn = record.indexOf("location");
+                headerParsedColumn = record.indexOf("header_parsed");
+                bpmLockColumn = record.indexOf("bpm_lock");
+                beatsVersionColumn = record.indexOf("beats_version");
+                beatsSubVersionColumn = record.indexOf("beats_sub_version");
+                beatsColumn = record.indexOf("beats");
+            }
+            QString artist = query.value(artistColumn).toString();
+            QString title = query.value(titleColumn).toString();
+            QString album = query.value(albumColumn).toString();
+            QString year = query.value(yearColumn).toString();
+            QString genre = query.value(genreColumn).toString();
+            QString composer = query.value(composerColumn).toString();
+            QString tracknumber = query.value(trackNumberColumn).toString();
+            QString comment = query.value(commentColumn).toString();
+            QString url = query.value(urlColumn).toString();
+            QString key = query.value(keyColumn).toString();
+            int duration = query.value(durationColumn).toInt();
+            int bitrate = query.value(bitrateColumn).toInt();
+            int rating = query.value(ratingColumn).toInt();
+            int samplerate = query.value(sampleRateColumn).toInt();
+            int cuepoint = query.value(cuepointColumn).toInt();
+            QString bpm = query.value(bpmColumn).toString();
+            QString replaygain = query.value(replayGainColumn).toString();
+            int timesplayed = query.value(timesPlayedColumn).toInt();
+            QDateTime datetime_added = query.value(dateTimeAddedColumn).toDateTime();
+            int played = query.value(playedColumn).toInt();
+            int channels = query.value(channelsColumn).toInt();
+            QString filetype = query.value(fileTypeColumn).toString();
+            QString location = query.value(locationColumn).toString();
+            bool header_parsed = query.value(headerParsedColumn).toBool();
+            bool has_bpm_lock = query.value(bpmLockColumn).toBool();
 
             TrackPointer pTrack = TrackPointer(new TrackInfoObject(location, false), &TrackDAO::deleteTrack);
 
@@ -828,9 +865,9 @@ TrackPointer TrackDAO::getTrackFromDB(const int id) const {
             pTrack->setCuePoint((float)cuepoint);
             pTrack->setReplayGain(replaygain.toFloat());
 
-            QString beatsVersion = query.value(query.record().indexOf("beats_version")).toString();
-            QString beatsSubVersion = query.value(query.record().indexOf("beats_sub_version")).toString();
-            QByteArray beatsBlob = query.value(query.record().indexOf("beats")).toByteArray();
+            QString beatsVersion = query.value(beatsVersionColumn).toString();
+            QString beatsSubVersion = query.value(beatsSubVersionColumn).toString();
+            QByteArray beatsBlob = query.value(beatsColumn).toByteArray();
             BeatsPointer pBeats = BeatFactory::loadBeatsFromByteArray(pTrack, beatsVersion, beatsSubVersion, &beatsBlob);
             if (pBeats) {
                 pTrack->setBeats(pBeats);
